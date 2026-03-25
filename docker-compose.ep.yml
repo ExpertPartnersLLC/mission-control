@@ -1,0 +1,45 @@
+# ============================================================
+# Expert Partners Mission Control — Docker Compose Override
+# Deploy to: ~/.openclaw/mission-control/docker-compose.ep.yml
+#
+# Layer this ON TOP of the base + hardened compose files:
+#   docker compose -f docker-compose.yml \
+#                  -f docker-compose.hardened.yml \
+#                  -f docker-compose.ep.yml up -d
+#
+# This file adds EP-specific volume mounts so Mission Control
+# can read your OpenClaw config, agent workspaces, and vault.
+# ============================================================
+
+services:
+  mission-control:
+    volumes:
+      # OpenClaw home directory (read-only — MC observes, never writes)
+      - ${HOME}/.openclaw:/openclaw:ro
+
+      # EmberVault for memory browser (read-only)
+      - ${HOME}/Obsidian/EmberVault:/embervault:ro
+
+      # Claude Code projects for auto-discovery (read-only)
+      - ${HOME}/.claude:/claude-sessions:ro
+
+      # EP brand assets (logo files, custom CSS)
+      - ./public/ep-logo-white.svg:/app/public/ep-logo-white.svg:ro
+      - ./public/ep-logo-black.svg:/app/public/ep-logo-black.svg:ro
+      - ./public/ep-brand.css:/app/public/ep-brand.css:ro
+
+    environment:
+      # Override memory dir to read all agent workspaces
+      OPENCLAW_MEMORY_DIR: /openclaw
+      # Claude Code session scanning path inside container
+      MC_CLAUDE_CODE_PATH: /claude-sessions/projects
+      # Allow plaintext ws:// to host.docker.internal (trusted local Docker network)
+      OPENCLAW_ALLOW_INSECURE_PRIVATE_WS: "1"
+
+    # Health check — verify MC is responding
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s

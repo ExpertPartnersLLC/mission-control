@@ -269,14 +269,18 @@ async function getSystemStatus(workspaceId: number) {
         status.uptime = Date.now() - parseInt(match[1]) * 1000
       }
     } else {
-      const { stdout } = await runCommand('uptime', ['-s'], {
-        timeoutMs: 3000
-      })
-      const bootTime = new Date(stdout.trim())
-      status.uptime = Date.now() - bootTime.getTime()
+      // In containers /proc/uptime is always available; fall back to process.uptime()
+      try {
+        const fs = await import('fs/promises')
+        const raw = await fs.readFile('/proc/uptime', 'utf8')
+        const secs = parseFloat(raw.split(' ')[0])
+        status.uptime = secs * 1000
+      } catch {
+        status.uptime = process.uptime() * 1000
+      }
     }
   } catch (error) {
-    logger.error({ err: error }, 'Error getting uptime')
+    logger.warn({ err: error }, 'Error getting uptime')
   }
 
   try {
@@ -311,26 +315,29 @@ async function getSystemStatus(workspaceId: number) {
   }
 
   try {
-    // ClawdBot processes
-    const { stdout: processOutput } = await runCommand(
-      'ps',
-      ['-A', '-o', 'pid,comm,args'],
-      { timeoutMs: 3000 }
-    )
-    const processes = processOutput.split('\n')
-      .filter(line => line.trim())
-      .filter(line => !line.trim().toLowerCase().startsWith('pid '))
-      .map(line => {
-        const parts = line.trim().split(/\s+/)
-        return {
-          pid: parts[0],
-          command: parts.slice(2).join(' ')
-        }
-      })
-      .filter((proc) => /clawdbot|openclaw/i.test(proc.command))
-    status.processes = processes
+    // ClawdBot processes — skip in containers where ps is unavailable
+    const isContainer = typeof process.env.container !== 'undefined' || (await import('fs')).existsSync('/.dockerenv')
+    if (!isContainer) {
+      const { stdout: processOutput } = await runCommand(
+        'ps',
+        ['-A', '-o', 'pid,comm,args'],
+        { timeoutMs: 3000 }
+      )
+      const processes = processOutput.split('\n')
+        .filter(line => line.trim())
+        .filter(line => !line.trim().toLowerCase().startsWith('pid '))
+        .map(line => {
+          const parts = line.trim().split(/\s+/)
+          return {
+            pid: parts[0],
+            command: parts.slice(2).join(' ')
+          }
+        })
+        .filter((proc) => /clawdbot|openclaw/i.test(proc.command))
+      status.processes = processes
+    }
   } catch (error) {
-    logger.error({ err: error }, 'Error getting process info')
+    logger.warn({ err: error }, 'Error getting process info')
   }
 
   try {
@@ -384,19 +391,24 @@ async function getGatewayStatus() {
   }
 
   try {
-    const { stdout } = await runCommand('ps', ['-A', '-o', 'pid,comm,args'], {
-      timeoutMs: 3000
-    })
-    const match = stdout
-      .split('\n')
-      .find((line) => /clawdbot-gateway|openclaw-gateway|openclaw.*gateway/i.test(line))
-    if (match) {
-      const parts = match.trim().split(/\s+/)
-      gatewayStatus.running = true
-      gatewayStatus.pid = parts[0]
+    // In Docker containers ps is often unavailable; skip process detection there
+    if (typeof process.env.container !== 'undefined' || (await import('fs')).existsSync('/.dockerenv')) {
+      // Cannot detect gateway process inside container — rely on port check below
+    } else {
+      const { stdout } = await runCommand('ps', ['-A', '-o', 'pid,comm,args'], {
+        timeoutMs: 3000
+      })
+      const match = stdout
+        .split('\n')
+        .find((line) => /clawdbot-gateway|openclaw-gateway|openclaw.*gateway/i.test(line))
+      if (match) {
+        const parts = match.trim().split(/\s+/)
+        gatewayStatus.running = true
+        gatewayStatus.pid = parts[0]
+      }
     }
   } catch (error) {
-    // Gateway not running
+    // Gateway not running or ps not available
   }
 
   try {

@@ -1,0 +1,322 @@
+/*
+ * Expert Partners Brand Override for Mission Control
+ * Deploy to: ~/.openclaw/mission-control/public/ep-brand.css
+ * Then import in src/app/layout.tsx or globals.css
+ *
+ * Source of truth: Expert Partners Brand Guidelines v2.0
+ * Colors, typography, shadows, spacing — all locked to brand spec.
+ */
+
+/* ============================================================
+   Google Fonts Import — PT Serif, Overpass, Poppins
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Overpass:wght@400;500;600&family=Poppins:wght@300;400;500;600&display=swap');
+
+/* ============================================================
+   CSS Custom Properties — EP Brand System
+   ============================================================ */
+:root {
+  /* --- Primary Colors --- */
+  --ep-brand-blue: #2757CF;
+  --ep-blue-hover: #3A6BFF;
+  --ep-black: #000000;
+  --ep-white: #FFFFFF;
+
+  /* --- Neutral Tones --- */
+  --ep-light-gray: #F5F5F5;
+  --ep-mid-gray: #CCCCCC;
+  --ep-dark-gray: #333333;
+
+  /* --- Typography --- */
+  --ep-font-headline: 'PT Serif', Georgia, serif;
+  --ep-font-subhead: 'Overpass', 'Helvetica Neue', sans-serif;
+  --ep-font-body: 'Poppins', 'Helvetica Neue', sans-serif;
+
+  /* --- Shadows (from brand guide) --- */
+  --ep-shadow-card: 0px 2px 8px rgba(0, 0, 0, 0.08);
+  --ep-shadow-hover: 0px 4px 16px rgba(0, 0, 0, 0.12);
+  --ep-shadow-glow: 0 0 20px rgba(39, 87, 207, 0.15);
+
+  /* --- Spacing Scale (locked) --- */
+  --ep-space-xs: 4px;
+  --ep-space-s: 8px;
+  --ep-space-m: 16px;
+  --ep-space-l: 24px;
+  --ep-space-xl: 32px;
+
+  /* --- Border Radius --- */
+  --ep-radius-card: 8px;
+  --ep-radius-button: 8px;
+}
+
+/* ============================================================
+   Global Typography Overrides
+   ============================================================ */
+
+/* Headlines — PT Serif */
+h1, h2, h3,
+[class*="heading"],
+[class*="Heading"],
+[class*="title"],
+[class*="Title"] {
+  font-family: var(--ep-font-headline) !important;
+  line-height: 1.1;
+}
+
+/* Subheads — Overpass */
+h4, h5, h6,
+[class*="subtitle"],
+[class*="Subtitle"],
+[class*="subhead"],
+[class*="Subhead"] {
+  font-family: var(--ep-font-subhead) !important;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+/* Body text — Poppins Light */
+body,
+p,
+span,
+div,
+li,
+td,
+th,
+input,
+textarea,
+select,
+[class*="body"],
+[class*="Body"],
+[class*="text"],
+[class*="description"],
+[class*="Description"] {
+  font-family: var(--ep-font-body) !important;
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+/* Labels and CTAs — Poppins Medium, ALL CAPS */
+label,
+[class*="label"],
+[class*="Label"],
+[class*="badge"],
+[class*="Badge"],
+[class*="tag"],
+[class*="Tag"],
+[class*="cta"],
+[class*="CTA"] {
+  font-family: var(--ep-font-body) !important;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+}
+
+/* Navigation items — Poppins Medium */
+nav,
+nav a,
+nav button,
+[class*="nav"],
+[class*="Nav"],
+[class*="sidebar"],
+[class*="Sidebar"] a,
+[class*="sidebar"] button,
+[class*="menu"],
+[class*="Menu"] a {
+  font-family: var(--ep-font-body) !important;
+  font-weight: 500;
+}
+
+/* ============================================================
+   Color System Overrides
+   ============================================================ */
+
+/* Primary accent — Brand Blue everywhere the app uses its default accent */
+:root {
+  --primary: 217 71% 48%;           /* HSL of #2757CF */
+  --primary-foreground: 0 0% 100%;  /* White text on blue */
+
+  /* If Mission Control uses these Tailwind-style CSS vars */
+  --accent: 217 71% 48%;
+  --accent-foreground: 0 0% 100%;
+  --ring: 217 71% 48%;
+}
+
+/* ============================================================
+   Button Overrides
+   ============================================================ */
+
+/* Primary buttons — Brand Blue with white text */
+button[class*="primary"],
+[class*="btn-primary"],
+[class*="Button"][class*="primary"],
+a[class*="primary"] {
+  background-color: var(--ep-brand-blue) !important;
+  color: var(--ep-white) !important;
+  border-radius: var(--ep-radius-button) !important;
+  font-family: var(--ep-font-body) !important;
+  font-weight: 500 !important;
+  transition: background-color 0.2s ease;
+}
+
+button[class*="primary"]:hover,
+[class*="btn-primary"]:hover,
+a[class*="primary"]:hover {
+  background-color: var(--ep-blue-hover) !important;
+}
+
+/* Secondary buttons — transparent with blue border */
+button[class*="secondary"],
+[class*="btn-secondary"],
+button[class*="outline"],
+[class*="btn-outline"] {
+  background-color: transparent !important;
+  color: var(--ep-brand-blue) !important;
+  border: 1px solid var(--ep-brand-blue) !important;
+  border-radius: var(--ep-radius-button) !important;
+  font-family: var(--ep-font-body) !important;
+  font-weight: 500 !important;
+}
+
+button[class*="secondary"]:hover,
+[class*="btn-secondary"]:hover,
+button[class*="outline"]:hover {
+  background-color: rgba(39, 87, 207, 0.06) !important;
+  border-color: var(--ep-blue-hover) !important;
+}
+
+/* ============================================================
+   Card Overrides
+   ============================================================ */
+
+[class*="card"],
+[class*="Card"],
+[class*="panel"],
+[class*="Panel"] {
+  border-radius: var(--ep-radius-card) !important;
+  box-shadow: var(--ep-shadow-card) !important;
+}
+
+[class*="card"]:hover,
+[class*="Card"]:hover {
+  box-shadow: var(--ep-shadow-hover) !important;
+}
+
+/* Light mode card borders */
+@media (prefers-color-scheme: light) {
+  [class*="card"],
+  [class*="Card"] {
+    border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  }
+}
+
+/* Dark mode card borders */
+@media (prefers-color-scheme: dark) {
+  [class*="card"],
+  [class*="Card"] {
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+}
+
+/* ============================================================
+   Sidebar Branding
+   ============================================================ */
+
+/* Sidebar accent square — Brand Blue background with white EP logo */
+[class*="sidebar"] [class*="logo"],
+[class*="Sidebar"] [class*="logo"],
+[class*="sidebar"] [class*="brand"],
+[class*="Sidebar"] [class*="brand"] {
+  background-color: var(--ep-brand-blue) !important;
+  border-radius: var(--ep-radius-card) !important;
+}
+
+/* ============================================================
+   Link and Accent Colors
+   ============================================================ */
+
+a:not([class]),
+[class*="link"],
+[class*="Link"] {
+  color: var(--ep-brand-blue);
+}
+
+a:not([class]):hover,
+[class*="link"]:hover {
+  color: var(--ep-blue-hover);
+}
+
+/* Active/selected states — Brand Blue glow */
+[class*="active"],
+[class*="Active"],
+[class*="selected"],
+[class*="Selected"],
+[aria-selected="true"],
+[data-state="active"] {
+  box-shadow: var(--ep-shadow-glow);
+}
+
+/* ============================================================
+   Kanban Board — Clean EP Styling
+   ============================================================ */
+
+/* Kanban column headers */
+[class*="kanban"] [class*="header"],
+[class*="Kanban"] [class*="header"],
+[class*="column"] [class*="header"] {
+  font-family: var(--ep-font-subhead) !important;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  font-size: 13px;
+}
+
+/* ============================================================
+   Agent Status Indicators
+   ============================================================ */
+
+/* Online/active agent — subtle Brand Blue pulse */
+[class*="status"][class*="online"],
+[class*="status"][class*="active"],
+[class*="status"][class*="running"] {
+  background-color: var(--ep-brand-blue) !important;
+}
+
+/* ============================================================
+   Lucide Icons — Brand-compliant stroke width
+   ============================================================ */
+
+svg[class*="lucide"],
+[class*="icon"] svg {
+  stroke-width: 1.5 !important;
+}
+
+/* ============================================================
+   Focus States — Accessibility (brand guide: visible focus)
+   ============================================================ */
+
+:focus-visible {
+  outline: 2px solid var(--ep-brand-blue) !important;
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   Scrollbar Styling (subtle, on-brand)
+   ============================================================ */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ep-mid-gray);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ep-dark-gray);
+}
