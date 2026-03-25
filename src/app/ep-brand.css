@@ -391,3 +391,27 @@ svg[class*="lucide"],
 .dark [class*="Sidebar"] {
   background-color: var(--ep-bg-main) !important;
 }
+
+/* ============================================
+   Dark mode overrides — charcoal instead of pure black
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: 230 15% 11%;        /* ~#1a1a2e */
+    --card: 230 15% 14%;              /* ~#22223a */
+    --popover: 230 15% 14%;
+    --muted: 230 10% 20%;
+    --border: 230 10% 22%;
+    --input: 230 10% 22%;
+  }
+}
+
+/* Force dark theme class overrides (if MC uses .dark class instead of media query) */
+.dark, [data-theme="dark"] {
+  --background: 230 15% 11% !important;
+  --card: 230 15% 14% !important;
+  --popover: 230 15% 14% !important;
+  --muted: 230 10% 20% !important;
+  --border: 230 10% 22% !important;
+  --input: 230 10% 22% !important;
+}

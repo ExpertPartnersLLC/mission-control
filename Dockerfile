@@ -18,6 +18,10 @@ RUN if [ -f pnpm-lock.yaml ]; then \
 FROM base AS build
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+ARG NEXT_PUBLIC_GATEWAY_HOST=127.0.0.1
+ARG NEXT_PUBLIC_GATEWAY_PORT=18789
+ARG NEXT_PUBLIC_GATEWAY_PROTOCOL=ws
+ARG NEXT_PUBLIC_GATEWAY_URL=
 RUN pnpm build
 
 FROM node:22.22.0-slim AS runtime

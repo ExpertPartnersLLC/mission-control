@@ -1,6 +1,11 @@
 services:
   mission-control:
-    build: .
+    build:
+      context: .
+      args:
+        - NEXT_PUBLIC_GATEWAY_HOST=${NEXT_PUBLIC_GATEWAY_HOST:-127.0.0.1}
+        - NEXT_PUBLIC_GATEWAY_PORT=${NEXT_PUBLIC_GATEWAY_PORT:-18789}
+        - NEXT_PUBLIC_GATEWAY_PROTOCOL=${NEXT_PUBLIC_GATEWAY_PROTOCOL:-ws}
     container_name: mission-control
     ports:
       - "${MC_PORT:-3000}:${PORT:-3000}"
@@ -16,8 +21,10 @@ services:
       # NEXT_PUBLIC_GATEWAY_HOST must be reachable from the user's browser, NOT from
       # inside the container. For local Docker: leave empty (auto-detected from browser).
       # For remote/VPS: set to the public hostname or IP where the gateway is reachable.
-      # - NEXT_PUBLIC_GATEWAY_HOST=${NEXT_PUBLIC_GATEWAY_HOST:-}
-      # - NEXT_PUBLIC_GATEWAY_PORT=${NEXT_PUBLIC_GATEWAY_PORT:-18789}
+      - NEXT_PUBLIC_GATEWAY_HOST=${NEXT_PUBLIC_GATEWAY_HOST:-}
+      - NEXT_PUBLIC_GATEWAY_PORT=${NEXT_PUBLIC_GATEWAY_PORT:-18789}
+      - NEXT_PUBLIC_GATEWAY_PROTOCOL=${NEXT_PUBLIC_GATEWAY_PROTOCOL:-ws}
+      - NEXT_PUBLIC_GATEWAY_URL=${NEXT_PUBLIC_GATEWAY_URL:-}
       # Set to true if running without an OpenClaw gateway (standalone dashboard mode).
       # - NEXT_PUBLIC_GATEWAY_OPTIONAL=true
     env_file:
