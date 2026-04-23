@@ -49,6 +49,15 @@ export interface SchemaValidationResult {
   schema: SchemaBlock | null
 }
 
+// Hard bounds applied before any regex runs on file content. Legitimate
+// frontmatter is rarely larger than 1 KB; a schema block is smaller still.
+// These caps prevent polynomial ReDoS on pathological markdown bodies
+// (schema regexes have ambiguous (.+)/[^\]]* quantifiers that backtrack
+// quadratically on crafted inputs larger than ~64 KB).
+const MAX_CONTENT_BYTES_FOR_SCHEMA = 64 * 1024
+const MAX_FRONTMATTER_BYTES = 16 * 1024
+const MAX_SCHEMA_BLOCK_BYTES = 8 * 1024
+
 /**
  * Extract a _schema YAML block from markdown frontmatter.
  * Expects format:
@@ -62,14 +71,25 @@ export interface SchemaValidationResult {
  * ```
  */
 export function extractSchema(content: string): SchemaBlock | null {
-  const fmMatch = content.match(/^---\n([\s\S]*?)\n---/)
+  if (typeof content !== 'string') return null
+  const safeContent =
+    content.length > MAX_CONTENT_BYTES_FOR_SCHEMA
+      ? content.slice(0, MAX_CONTENT_BYTES_FOR_SCHEMA)
+      : content
+  const fmMatch = safeContent.match(/^---\n([\s\S]*?)\n---/)
   if (!fmMatch) return null
 
-  const fm = fmMatch[1]
+  const fm =
+    fmMatch[1].length > MAX_FRONTMATTER_BYTES
+      ? fmMatch[1].slice(0, MAX_FRONTMATTER_BYTES)
+      : fmMatch[1]
   const schemaMatch = fm.match(/_schema:\s*\n((?:\s{2,}.+\n?)*)/)
   if (!schemaMatch) return null
 
-  const block = schemaMatch[1]
+  const block =
+    schemaMatch[1].length > MAX_SCHEMA_BLOCK_BYTES
+      ? schemaMatch[1].slice(0, MAX_SCHEMA_BLOCK_BYTES)
+      : schemaMatch[1]
   const schema: SchemaBlock = { type: 'unknown' }
 
   const typeMatch = block.match(/type:\s*(.+)/)
