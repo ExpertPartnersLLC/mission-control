@@ -4,6 +4,7 @@ const fs = require('fs')
 const net = require('net')
 const { spawn } = require('child_process')
 const path = require('path')
+const { clampTimeout } = require('./provisioner-utils.cjs')
 
 const SOCKET_PATH = process.env.MC_PROVISIONER_SOCKET || '/run/mc-provisioner.sock'
 const TOKEN = String(process.env.MC_PROVISIONER_TOKEN || '')
@@ -160,7 +161,7 @@ function run(command, args, timeoutMs) {
     const timer = setTimeout(() => {
       timedOut = true
       child.kill('SIGKILL')
-    }, Math.max(1000, Number(timeoutMs || 10000)))
+    }, clampTimeout(timeoutMs))
 
     child.stdout.on('data', (d) => { stdout += d.toString('utf8') })
     child.stderr.on('data', (d) => { stderr += d.toString('utf8') })
