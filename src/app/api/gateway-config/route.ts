@@ -6,6 +6,7 @@ import { config } from '@/lib/config'
 import { validateBody, gatewayConfigUpdateSchema } from '@/lib/validation'
 import { mutationLimiter } from '@/lib/rate-limit'
 import { getDetectedGatewayToken } from '@/lib/gateway-runtime'
+import { setNestedValue, UNSAFE_NESTED_KEYS } from '@/lib/nested-value'
 
 function getConfigPath(): string | null {
   return config.openclawConfigPath || null
@@ -132,6 +133,15 @@ export async function PUT(request: NextRequest) {
   for (const key of Object.keys(body.updates)) {
     if (blockedPaths.some(bp => key.startsWith(bp))) {
       return NextResponse.json({ error: `Cannot modify protected field: ${key}` }, { status: 403 })
+    }
+    // Reject any path segment that would pollute the prototype chain.
+    for (const segment of key.split('.')) {
+      if (UNSAFE_NESTED_KEYS.has(segment)) {
+        return NextResponse.json(
+          { error: `Invalid path segment: "${segment}" is not a permitted key` },
+          { status: 400 },
+        )
+      }
     }
   }
 
@@ -269,16 +279,6 @@ async function updateSystem(request: NextRequest, auth: any): Promise<NextRespon
   }
 }
 
-/** Set a value in a nested object using dot-notation path */
-function setNestedValue(obj: any, path: string, value: any) {
-  const keys = path.split('.')
-  let current = obj
-  for (let i = 0; i < keys.length - 1; i++) {
-    if (current[keys[i]] === undefined) current[keys[i]] = {}
-    current = current[keys[i]]
-  }
-  current[keys[keys.length - 1]] = value
-}
 
 /** Redact sensitive values for display */
 function redactSensitive(obj: any, parentKey = ''): any {
