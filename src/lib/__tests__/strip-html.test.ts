@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 
 // Reproduce the stripHtml logic from markdown-renderer to test it in isolation
 function stripHtml(content: string): string {
-  return content.replace(/<[^>]*>/g, '')
+  return content.replace(/<[^>]*>/g, '').replace(/</g, '')
 }
 
 describe('stripHtml', () => {
@@ -46,8 +46,17 @@ describe('stripHtml', () => {
   })
 
   it('preserves angle brackets that are not HTML tags', () => {
-    // This is a limitation — mathematical expressions like "x < 5" would be affected
-    // But for our use case (stripping pasted HTML), this is acceptable
+    // `>` is preserved, `<` is stripped. The strip is intentional — math
+    // expressions like "x < 5" get the `<` removed, but that's acceptable
+    // for markdown preview text and it closes the incomplete-multi-char
+    // sanitization gap CodeQL flags.
     expect(stripHtml('5 > 3 is true')).toBe('5 > 3 is true')
+  })
+
+  it('strips stray `<` left by malformed tag carriers (defense in depth)', () => {
+    // `<script<` is not a well-formed tag; the first pass cannot match it.
+    // The second pass strips the stray `<` so the output contains no
+    // residual tag-opening bracket.
+    expect(stripHtml('<script<alert(1)</script>')).not.toContain('<')
   })
 })

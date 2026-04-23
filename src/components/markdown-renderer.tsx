@@ -9,7 +9,12 @@ interface MarkdownRendererProps {
 }
 
 function stripHtml(content: string): string {
-  return content.replace(/<[^>]*>/g, '')
+  // First pass strips well-formed HTML tags. Second pass neutralizes any
+  // stray '<' left over from malformed tags (e.g. '<script<') that the
+  // first pass cannot match. The stripped output is consumed by
+  // react-markdown which never renders raw HTML — this is defense-in-
+  // depth; real XSS safety comes from the downstream consumer.
+  return content.replace(/<[^>]*>/g, '').replace(/</g, '')
 }
 
 function getPreviewContent(content: string): string {

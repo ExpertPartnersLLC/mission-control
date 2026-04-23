@@ -16,8 +16,13 @@ const adapters: Record<string, () => FrameworkAdapter> = {
 }
 
 export function getAdapter(framework: string): FrameworkAdapter {
+  // Own-property lookup prevents descent into inherited keys like
+  // toString or constructor that would otherwise return a function
+  // and bypass the explicit allowlist below.
+  if (!Object.prototype.hasOwnProperty.call(adapters, framework)) {
+    throw new Error(`Unknown framework adapter: ${framework}`)
+  }
   const factory = adapters[framework]
-  if (!factory) throw new Error(`Unknown framework adapter: ${framework}`)
   return factory()
 }
 

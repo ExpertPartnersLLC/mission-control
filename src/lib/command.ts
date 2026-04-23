@@ -14,11 +14,20 @@ interface CommandResult {
   code: number | null
 }
 
+// Defense-in-depth: shell: false already prevents shell-metacharacter
+// interpretation of argv, but we also assert the executable name is a
+// well-formed path or bare identifier. This catches accidental refactors
+// that might let user input flow into the `command` parameter.
+const SAFE_COMMAND_RE = /^[A-Za-z0-9_\-./]+$/
+
 export function runCommand(
   command: string,
   args: string[],
   options: CommandOptions = {}
 ): Promise<CommandResult> {
+  if (typeof command !== 'string' || !SAFE_COMMAND_RE.test(command) || command.includes('\0')) {
+    return Promise.reject(new Error(`runCommand: unsafe command name`))
+  }
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd: options.cwd,

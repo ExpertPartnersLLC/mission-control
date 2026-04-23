@@ -132,6 +132,22 @@ export async function PUT(
       if (!config.soulTemplatesDir) {
         return NextResponse.json({ error: 'Templates directory not configured' }, { status: 500 });
       }
+      // Defense-in-depth: reject obviously-unsafe template names upfront,
+      // even though resolveWithin enforces containment. An explicit shape
+      // check rules out path separators, traversal, null bytes, and
+      // hidden files before any filesystem operation runs.
+      if (
+        typeof template_name !== 'string' ||
+        !template_name ||
+        template_name.length > 128 ||
+        template_name.includes('/') ||
+        template_name.includes('\\') ||
+        template_name.includes('..') ||
+        template_name.includes('\0') ||
+        template_name.startsWith('.')
+      ) {
+        return NextResponse.json({ error: 'Invalid template name' }, { status: 400 });
+      }
       let templatePath: string;
       try {
         templatePath = resolveWithin(config.soulTemplatesDir, `${template_name}.md`);
@@ -234,6 +250,20 @@ export async function PATCH(
     }
     
     if (templateName) {
+      // Same shape check as PUT: reject unsafe template names before any
+      // filesystem op; resolveWithin is the lexical containment fallback.
+      if (
+        typeof templateName !== 'string' ||
+        !templateName ||
+        templateName.length > 128 ||
+        templateName.includes('/') ||
+        templateName.includes('\\') ||
+        templateName.includes('..') ||
+        templateName.includes('\0') ||
+        templateName.startsWith('.')
+      ) {
+        return NextResponse.json({ error: 'Invalid template name' }, { status: 400 });
+      }
       // Get specific template content
       let templatePath: string;
       try {
@@ -241,11 +271,11 @@ export async function PATCH(
       } catch (pathError) {
         return NextResponse.json({ error: 'Invalid template name' }, { status: 400 });
       }
-      
+
       if (!existsSync(templatePath)) {
         return NextResponse.json({ error: 'Template not found' }, { status: 404 });
       }
-      
+
       const templateContent = readFileSync(templatePath, 'utf8');
       
       return NextResponse.json({
