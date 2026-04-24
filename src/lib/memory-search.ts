@@ -12,7 +12,7 @@
 
 import type Database from 'better-sqlite3'
 import { readFileSync, existsSync } from 'fs'
-import { join, resolve, sep } from 'path'
+import { join, resolve, relative, isAbsolute } from 'path'
 import { getDatabase } from '@/lib/db'
 import { scanMemoryFiles, type MemoryFileInfo } from '@/lib/memory-utils'
 import { logger } from '@/lib/logger'
@@ -113,19 +113,19 @@ export async function rebuildIndex(baseDir: string, allowedPrefixes: string[]): 
  * might invoke without those upstream checks. Re-verify containment at the
  * boundary so the function is safe independent of caller discipline.
  *
- * The containment check is inlined (rather than calling resolveWithin)
- * so CodeQL's js/path-injection taint analysis can see the explicit
- * startsWith(base + sep) guard.
+ * The containment check uses path.relative() and rejects any result that
+ * starts with '..' or is absolute. This is the pattern CodeQL's
+ * js/path-injection taint analysis recognizes as a sanitizer.
  */
 export function indexFile(db: Database.Database, baseDir: string, relativePath: string): void {
   ensureFtsTable(db)
-  const baseResolved = resolve(baseDir)
-  const candidate = resolve(baseResolved, relativePath)
-  if (candidate !== baseResolved && !candidate.startsWith(baseResolved + sep)) {
-    logger.warn({ path: relativePath }, 'indexFile rejected path outside base')
-    return
-  }
   try {
+    const baseResolved = resolve(baseDir)
+    const candidate = resolve(baseResolved, relativePath)
+    const fromBase = relative(baseResolved, candidate)
+    if (fromBase.startsWith('..') || isAbsolute(fromBase)) {
+      throw new Error(`indexFile: path escapes baseDir (${relativePath})`)
+    }
     const content = readFileSync(candidate, 'utf-8')
     const name = relativePath.split('/').pop() || relativePath
     const title = extractTitle(content, name)
@@ -136,7 +136,7 @@ export function indexFile(db: Database.Database, baseDir: string, relativePath: 
       db.prepare('INSERT INTO memory_fts (path, title, content) VALUES (?, ?, ?)').run(relativePath, title, body)
     })()
   } catch (err) {
-    logger.warn({ err, path: relativePath }, 'Failed to index file for FTS')
+    logger.warn({ err, path: relativePath }, 'indexFile failed or rejected')
   }
 }
 

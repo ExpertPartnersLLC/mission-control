@@ -166,14 +166,13 @@ function run(command, args, timeoutMs) {
     let stderr = ''
     let timedOut = false
 
-    // Resolve the supervisory-timer duration with an explicit upper
-    // bound visible to the CodeQL analyzer.
-    const rawTimeout = Number(timeoutMs || DEFAULT_TIMEOUT_MS)
-    const finiteTimeout = Number.isFinite(rawTimeout) ? rawTimeout : DEFAULT_TIMEOUT_MS
-    const safeTimeoutMs = Math.min(
-      MAX_TIMEOUT_MS,
-      Math.max(MIN_TIMEOUT_MS, finiteTimeout),
-    )
+    // Resolve the supervisory-timer duration with a literal upper
+    // bound. CodeQL's js/resource-exhaustion rule wants to see a
+    // constant literal in Math.min to confirm the bound is static.
+    const rawTimeout = Number(timeoutMs || 10000)
+    const finiteTimeout = Number.isFinite(rawTimeout) ? rawTimeout : 10000
+    // 600000 ms = 10 minutes; 1000 ms = 1 second floor.
+    const safeTimeoutMs = Math.min(600000, Math.max(1000, finiteTimeout))
     const timer = setTimeout(() => {
       timedOut = true
       child.kill('SIGKILL')
