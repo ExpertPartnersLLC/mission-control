@@ -211,3 +211,43 @@ describe('isCronDue', () => {
     expect(isCronDue('0 9-17 * * *', t18, 0)).toBe(false)
   })
 })
+
+describe('parseNaturalSchedule (ReDoS hardening)', () => {
+  it('returns null for inputs longer than 256 chars without running regex', () => {
+    // Construct a pathological input that, if regex-parsed, would trigger
+    // polynomial backtracking in the "every DAYNAME at TIME" pattern.
+    const pathological = 'every\t' + '\t'.repeat(100_000) + '0\tat\t' + '\t'.repeat(100_000) + '0'
+    const start = Date.now()
+    const result = parseNaturalSchedule(pathological)
+    const elapsed = Date.now() - start
+    expect(result).toBeNull()
+    // Bound: hitting the polynomial regex would take seconds on this input;
+    // the length cap should make the call return in well under 50ms.
+    expect(elapsed).toBeLessThan(50)
+  })
+
+  it('returns null for a 10MB pathological input in microseconds', () => {
+    const huge = 'daily\tat\t' + '\t'.repeat(10_000_000)
+    const start = Date.now()
+    const result = parseNaturalSchedule(huge)
+    const elapsed = Date.now() - start
+    expect(result).toBeNull()
+    expect(elapsed).toBeLessThan(50)
+  })
+
+  it('still parses legitimate schedules of any length up to the cap', () => {
+    // 256 chars is far longer than any real schedule, but must still parse
+    // correctly if the user happens to pad with whitespace.
+    const padded = 'every wednesday at 9:30 am' + ' '.repeat(200)
+    const result = parseNaturalSchedule(padded)
+    expect(result).not.toBeNull()
+    expect(result!.cronExpr).toBe('30 9 * * 3')
+  })
+
+  it('accepts null and non-string inputs gracefully', () => {
+    // @ts-expect-error testing defensive input handling
+    expect(parseNaturalSchedule(null)).toBeNull()
+    // @ts-expect-error testing defensive input handling
+    expect(parseNaturalSchedule(undefined)).toBeNull()
+  })
+})

@@ -106,3 +106,47 @@ describe('validateSchema', () => {
     expect(result.errors).toHaveLength(3)
   })
 })
+
+describe('extractSchema (ReDoS hardening)', () => {
+  test('returns quickly on a 10MB pathological required: block', () => {
+    // Craft a frontmatter with a malformed required:[ that never closes and
+    // is padded with backslashes — the shape flagged by CodeQL for the
+    // [^\]]* regex.
+    const huge = '---\n_schema:\n  required:[' + '\\'.repeat(10_000_000) + '\n---\n'
+    const start = Date.now()
+    const schema = extractSchema(huge)
+    const elapsed = Date.now() - start
+    // The schema MAY return null (no closing `]` was found) — correctness
+    // is that the call returns fast, not polynomial-blowup slow.
+    expect(elapsed).toBeLessThan(200)
+    // And it must not throw.
+    expect(schema === null || typeof schema === 'object').toBe(true)
+  })
+
+  test('returns quickly on a 10MB pathological optional: block', () => {
+    const huge = '---\n_schema:\n  optional:[' + '\\'.repeat(10_000_000) + '\n---\n'
+    const start = Date.now()
+    const schema = extractSchema(huge)
+    const elapsed = Date.now() - start
+    expect(elapsed).toBeLessThan(200)
+    expect(schema === null || typeof schema === 'object').toBe(true)
+  })
+
+  test('handles non-string input defensively', () => {
+    // @ts-expect-error testing input validation
+    expect(extractSchema(null)).toBeNull()
+    // @ts-expect-error testing input validation
+    expect(extractSchema(undefined)).toBeNull()
+    // @ts-expect-error testing input validation
+    expect(extractSchema(42)).toBeNull()
+  })
+
+  test('still parses legitimate frontmatter of normal size', () => {
+    const content = '---\n_schema:\n  type: note\n  required: [title, tags]\n  optional: [source]\n---\nbody\n'
+    const schema = extractSchema(content)
+    expect(schema).not.toBeNull()
+    expect(schema!.type).toBe('note')
+    expect(schema!.required).toEqual(['title', 'tags'])
+    expect(schema!.optional).toEqual(['source'])
+  })
+})

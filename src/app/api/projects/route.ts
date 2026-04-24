@@ -4,20 +4,7 @@ import { requireRole } from '@/lib/auth'
 import { mutationLimiter } from '@/lib/rate-limit'
 import { logger } from '@/lib/logger'
 import { ensureTenantWorkspaceAccess, ForbiddenError } from '@/lib/workspaces'
-
-function slugify(input: string): string {
-  return input
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 64)
-}
-
-function normalizePrefix(input: string): string {
-  const normalized = input.trim().toUpperCase().replace(/[^A-Z0-9]/g, '')
-  return normalized.slice(0, 12)
-}
+import { slugify, normalizePrefix } from '@/lib/project-slug'
 
 export async function GET(request: NextRequest) {
   const auth = requireRole(request, 'viewer')

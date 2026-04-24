@@ -9,7 +9,25 @@ interface MarkdownRendererProps {
 }
 
 function stripHtml(content: string): string {
-  return content.replace(/<[^>]*>/g, '')
+  // State-machine tag stripper. CodeQL flags regex-based strippers
+  // (js/incomplete-multi-character-sanitization) because quantifier
+  // patterns like /<[^>]*>/g can miss malformed carriers like
+  // '<script<'. A char-by-char pass avoids that entire class of
+  // pitfalls. The stripped output is consumed by react-markdown which
+  // never renders raw HTML anyway — this is defense-in-depth, not
+  // the primary XSS control.
+  let out = ''
+  let inTag = false
+  for (const ch of content) {
+    if (!inTag && ch === '<') {
+      inTag = true
+    } else if (inTag && ch === '>') {
+      inTag = false
+    } else if (!inTag) {
+      out += ch
+    }
+  }
+  return out
 }
 
 function getPreviewContent(content: string): string {

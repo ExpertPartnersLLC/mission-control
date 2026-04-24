@@ -31,6 +31,32 @@ export async function getGitHubToken(): Promise<string | null> {
   return await getEffectiveEnvValue('GITHUB_TOKEN') || null
 }
 
+const GITHUB_API_ORIGIN = 'https://api.github.com'
+
+/**
+ * Build a GitHub API URL from a relative path, rejecting any input that
+ * would cause the request to target a host other than api.github.com.
+ * Exported for unit testing; callers should use githubFetch.
+ */
+export function buildGithubApiUrl(input: string): string {
+  const raw = String(input || '').trim()
+  if (!raw) {
+    throw new Error('githubFetch: path is required')
+  }
+  // Reject any scheme (http:, https:, file:, javascript:, data:, etc.) and
+  // protocol-relative URLs. Only relative API paths are accepted.
+  if (/^[a-z][a-z0-9+.\-]*:/i.test(raw) || raw.startsWith('//')) {
+    throw new Error('githubFetch: absolute URLs are not permitted')
+  }
+  const normalized = raw.startsWith('/') ? raw : `/${raw}`
+  const url = new URL(normalized, GITHUB_API_ORIGIN)
+  // Belt-and-suspenders: reject any parser quirk that shifts origin.
+  if (url.origin !== GITHUB_API_ORIGIN) {
+    throw new Error('githubFetch: URL origin must be api.github.com')
+  }
+  return url.toString()
+}
+
 /**
  * Authenticated fetch wrapper for GitHub API.
  */
@@ -43,9 +69,7 @@ export async function githubFetch(
     throw new Error('GITHUB_TOKEN not configured')
   }
 
-  const url = path.startsWith('https://')
-    ? path
-    : `https://api.github.com${path.startsWith('/') ? '' : '/'}${path}`
+  const url = buildGithubApiUrl(path)
 
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token}`,

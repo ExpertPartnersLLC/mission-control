@@ -51,8 +51,17 @@ function parseTimeExpr(input: string): { hour: number; minute: number } | null {
 
 const CRON_REGEX = /^(\*|[\d,\-\/]+)\s+(\*|[\d,\-\/]+)\s+(\*|[\d,\-\/]+)\s+(\*|[\d,\-\/]+)\s+(\*|[\d,\-\/]+)$/
 
+// Natural-language schedules are never longer than a few dozen characters.
+// Enforce an upper bound before running any regex to prevent ReDoS via
+// polynomial backtracking on pathological inputs that target the (.+)
+// capture groups in the patterns below.
+const MAX_SCHEDULE_INPUT_LENGTH = 256
+
 export function parseNaturalSchedule(input: string): ParsedSchedule | null {
-  const text = input.trim()
+  if (input == null) return null
+  const raw = String(input)
+  if (raw.length > MAX_SCHEDULE_INPUT_LENGTH) return null
+  const text = raw.trim()
   if (!text) return null
 
   // Raw cron passthrough

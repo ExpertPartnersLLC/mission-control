@@ -5,6 +5,15 @@ const net = require('net')
 const { spawn } = require('child_process')
 const path = require('path')
 
+// Timeout bounds for the child-process supervisor. These are inlined in
+// the daemon (rather than imported from ./provisioner-utils.cjs) so the
+// CodeQL js/resource-exhaustion rule can see the upper bound on the
+// setTimeout duration directly in the calling scope. The helper in
+// provisioner-utils.cjs keeps the same logic for unit-test coverage.
+const MIN_TIMEOUT_MS = 1000
+const MAX_TIMEOUT_MS = 10 * 60 * 1000
+const DEFAULT_TIMEOUT_MS = 10000
+
 const SOCKET_PATH = process.env.MC_PROVISIONER_SOCKET || '/run/mc-provisioner.sock'
 const TOKEN = String(process.env.MC_PROVISIONER_TOKEN || '')
 const SOCKET_GROUP = process.env.MC_PROVISIONER_GROUP || 'openclaw'
@@ -157,10 +166,18 @@ function run(command, args, timeoutMs) {
     let stderr = ''
     let timedOut = false
 
+    // Resolve the supervisory-timer duration with an explicit upper
+    // bound visible to the CodeQL analyzer.
+    const rawTimeout = Number(timeoutMs || DEFAULT_TIMEOUT_MS)
+    const finiteTimeout = Number.isFinite(rawTimeout) ? rawTimeout : DEFAULT_TIMEOUT_MS
+    const safeTimeoutMs = Math.min(
+      MAX_TIMEOUT_MS,
+      Math.max(MIN_TIMEOUT_MS, finiteTimeout),
+    )
     const timer = setTimeout(() => {
       timedOut = true
       child.kill('SIGKILL')
-    }, Math.max(1000, Number(timeoutMs || 10000)))
+    }, safeTimeoutMs)
 
     child.stdout.on('data', (d) => { stdout += d.toString('utf8') })
     child.stderr.on('data', (d) => { stderr += d.toString('utf8') })
