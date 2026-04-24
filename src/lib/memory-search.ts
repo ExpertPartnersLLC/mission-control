@@ -12,10 +12,9 @@
 
 import type Database from 'better-sqlite3'
 import { readFileSync, existsSync } from 'fs'
-import { join } from 'path'
+import { join, resolve, sep } from 'path'
 import { getDatabase } from '@/lib/db'
 import { scanMemoryFiles, type MemoryFileInfo } from '@/lib/memory-utils'
-import { resolveWithin } from '@/lib/paths'
 import { logger } from '@/lib/logger'
 
 // ─── Schema ──────────────────────────────────────────────────────
@@ -113,18 +112,21 @@ export async function rebuildIndex(baseDir: string, allowedPrefixes: string[]): 
  * here, but indexFile is an exported library function that future callers
  * might invoke without those upstream checks. Re-verify containment at the
  * boundary so the function is safe independent of caller discipline.
+ *
+ * The containment check is inlined (rather than calling resolveWithin)
+ * so CodeQL's js/path-injection taint analysis can see the explicit
+ * startsWith(base + sep) guard.
  */
 export function indexFile(db: Database.Database, baseDir: string, relativePath: string): void {
   ensureFtsTable(db)
-  let safePath: string
-  try {
-    safePath = resolveWithin(baseDir, relativePath)
-  } catch (err) {
-    logger.warn({ err, path: relativePath }, 'indexFile rejected path outside base')
+  const baseResolved = resolve(baseDir)
+  const candidate = resolve(baseResolved, relativePath)
+  if (candidate !== baseResolved && !candidate.startsWith(baseResolved + sep)) {
+    logger.warn({ path: relativePath }, 'indexFile rejected path outside base')
     return
   }
   try {
-    const content = readFileSync(safePath, 'utf-8')
+    const content = readFileSync(candidate, 'utf-8')
     const name = relativePath.split('/').pop() || relativePath
     const title = extractTitle(content, name)
     const body = stripFrontmatter(content)

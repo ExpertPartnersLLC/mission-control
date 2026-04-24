@@ -1,8 +1,21 @@
 import { describe, it, expect } from 'vitest'
 
-// Reproduce the stripHtml logic from markdown-renderer to test it in isolation
+// Reproduce the stripHtml state-machine from markdown-renderer.tsx to
+// test it in isolation. Char-by-char parsing avoids the multi-char
+// sanitization pitfalls of regex-based strippers.
 function stripHtml(content: string): string {
-  return content.replace(/<[^>]*>/g, '').replace(/</g, '')
+  let out = ''
+  let inTag = false
+  for (const ch of content) {
+    if (!inTag && ch === '<') {
+      inTag = true
+    } else if (inTag && ch === '>') {
+      inTag = false
+    } else if (!inTag) {
+      out += ch
+    }
+  }
+  return out
 }
 
 describe('stripHtml', () => {

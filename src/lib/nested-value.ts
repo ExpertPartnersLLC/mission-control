@@ -22,24 +22,38 @@ export function hasUnsafeSegment(dotPath: string): boolean {
  * Set a value in a nested object using dot-notation path.
  *
  * Throws synchronously if any path segment is `__proto__`, `prototype`,
- * or `constructor`. Traverses only own properties — never descends into
- * inherited properties like `toString` or `hasOwnProperty`.
+ * or `constructor`. Intermediate objects are created with
+ * `Object.create(null)` so even if the blocklist is ever bypassed, the
+ * resulting objects have no prototype chain to pollute. Traverses only
+ * own properties — never descends into inherited keys like `toString`
+ * or `hasOwnProperty`.
+ *
+ * The key check uses explicit equality comparisons (rather than
+ * `UNSAFE_NESTED_KEYS.has(key)`) so the CodeQL
+ * js/prototype-polluting-function rule recognizes it as a sanitizer.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function setNestedValue(obj: any, path: string, value: any): void {
   const keys = path.split('.')
   for (const key of keys) {
-    if (UNSAFE_NESTED_KEYS.has(key)) {
+    if (key === '__proto__' || key === 'prototype' || key === 'constructor') {
       throw new Error(`setNestedValue: refusing unsafe key "${key}" in path "${path}"`)
     }
   }
   let current = obj
   for (let i = 0; i < keys.length - 1; i++) {
     const key = keys[i]
+    if (key === '__proto__' || key === 'prototype' || key === 'constructor') {
+      throw new Error(`setNestedValue: refusing unsafe key "${key}" in path "${path}"`)
+    }
     if (!Object.prototype.hasOwnProperty.call(current, key) || current[key] === undefined) {
-      current[key] = {}
+      current[key] = Object.create(null)
     }
     current = current[key]
   }
-  current[keys[keys.length - 1]] = value
+  const lastKey = keys[keys.length - 1]
+  if (lastKey === '__proto__' || lastKey === 'prototype' || lastKey === 'constructor') {
+    throw new Error(`setNestedValue: refusing unsafe key "${lastKey}" in path "${path}"`)
+  }
+  current[lastKey] = value
 }
