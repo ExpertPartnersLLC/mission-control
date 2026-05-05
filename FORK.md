@@ -1,4 +1,4 @@
-# Fork Notes — ExpertPartnersLLC/mission-control
+# Fork Notes — ExpertPartners/mission-control
 
 This repository is a **private fork** of [builderz-labs/mission-control](https://github.com/builderz-labs/mission-control), customized for deployment at Expert Partners LLC.
 
@@ -15,13 +15,13 @@ This clone is configured with two remotes:
 
 | Remote | URL | Purpose |
 |---|---|---|
-| `origin` | `git@github.com:ExpertPartnersLLC/mission-control.git` | Our private EP-customized fork. `main` is our deployed state. |
+| `origin` | `git@github.com:ExpertPartners/mission-control.git` | Our private EP-customized fork. `main` is our deployed state. |
 | `upstream` | `https://github.com/builderz-labs/mission-control.git` | The OSS parent. Pull from here to get upstream fixes/features. |
 
 To reproduce this topology on another clone:
 
 ```bash
-git clone git@github.com:ExpertPartnersLLC/mission-control.git
+git clone git@github.com:ExpertPartners/mission-control.git
 cd mission-control
 git remote add upstream https://github.com/builderz-labs/mission-control.git
 git fetch upstream

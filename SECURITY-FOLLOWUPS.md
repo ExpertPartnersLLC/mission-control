@@ -16,8 +16,8 @@ follow-up.
 
 | Alert | Package | Installed | Patched | Vuln |
 |---|---|---|---|---|
-| [DBT#28](https://github.com/ExpertPartnersLLC/mission-control/security/dependabot/28) | vite (medium, dev-scope) | 5.4.21 | 6.4.2 | Path traversal in optimized deps `.map` handling |
-| [DBT#1](https://github.com/ExpertPartnersLLC/mission-control/security/dependabot/1) | esbuild (medium, dev-scope) | 0.21.5 | 0.25.0 | Dev server CORS allows any website to read responses |
+| [DBT#28](https://github.com/ExpertPartners/mission-control/security/dependabot/28) | vite (medium, dev-scope) | 5.4.21 | 6.4.2 | Path traversal in optimized deps `.map` handling |
+| [DBT#1](https://github.com/ExpertPartners/mission-control/security/dependabot/1) | esbuild (medium, dev-scope) | 0.21.5 | 0.25.0 | Dev server CORS allows any website to read responses |
 
 Both are `scope:development` — they affect the Vite dev server (`pnpm dev`)
 and the esbuild dev server used by Vite. Neither is reachable in the
@@ -56,4 +56,4 @@ toolchain-upgrade cost.
 **Originating sprint artifacts:**
 - Branch: `security/codeql-sprint-2026-04-23`
 - Triage: [alerts-triage.md](./alerts-triage.md)
-- Sprint PR: see the ExpertPartnersLLC/mission-control pull-request list.
+- Sprint PR: see the ExpertPartners/mission-control pull-request list.

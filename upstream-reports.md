@@ -6,7 +6,7 @@ on coordinated-disclosure preference) for the upstream repo.
 
 **DO NOT SUBMIT** until explicit approval per the sprint launch prompt.
 
-Reporter: Allison Gaddy (fork maintainer, `ExpertPartnersLLC/mission-control`).
+Reporter: Allison Gaddy (fork maintainer, `ExpertPartners/mission-control`).
 All reports below were discovered via GitHub CodeQL code-scanning in the fork.
 Reference patches live on branch `security/codeql-sprint-2026-04-23` in the fork.
 
@@ -47,7 +47,7 @@ target accepts bearer tokens.
 **Suggested fix.** Remove the `https://` fast-path; require `path` to
 be relative. Resolve against a fixed `https://api.github.com` base and
 re-verify the resolved origin. Reference patch:
-<https://github.com/ExpertPartnersLLC/mission-control/commit/272f70d>
+<https://github.com/ExpertPartners/mission-control/commit/272f70d>
 
 ---
 
@@ -84,7 +84,7 @@ layer (400 response) and inside `setNestedValue` (throw, as belt-and-
 suspenders). Additionally traverse only own properties via
 `Object.prototype.hasOwnProperty.call` to avoid accidental descent
 into inherited keys like `toString`. Reference patch:
-<https://github.com/ExpertPartnersLLC/mission-control/commit/0be4594>
+<https://github.com/ExpertPartners/mission-control/commit/0be4594>
 
 ---
 
@@ -110,7 +110,7 @@ same function, so one payload exercises all three.
 
 **Suggested fix.** Cap `input.length` to 256 characters at function
 entry (legitimate schedules are always <64 characters). Reference
-patch: <https://github.com/ExpertPartnersLLC/mission-control/commit/a88f95b>
+patch: <https://github.com/ExpertPartners/mission-control/commit/a88f95b>
 
 ---
 
@@ -138,7 +138,7 @@ body pins the worker.
 
 **Suggested fix.** Layered length caps before regex execution: slice
 `content` to 64 KB, `fm` to 16 KB, `block` to 8 KB. Reference patch:
-<https://github.com/ExpertPartnersLLC/mission-control/commit/67bcf75>
+<https://github.com/ExpertPartners/mission-control/commit/67bcf75>
 
 ---
 
@@ -163,7 +163,7 @@ any compromised operator credential can exploit.
 **Suggested fix.** Cap `input.length` to 256 upfront (4× the 64-char
 output cap). Same pattern for the companion `normalizePrefix` helper.
 Reference patch:
-<https://github.com/ExpertPartnersLLC/mission-control/commit/439ed55>
+<https://github.com/ExpertPartners/mission-control/commit/439ed55>
 
 ---
 
@@ -188,7 +188,7 @@ any number of workers.
 that applies a 10-minute ceiling with a `Number.isFinite` guard. All
 allowlisted commands complete in seconds; 10 minutes is generous.
 Reference patch:
-<https://github.com/ExpertPartnersLLC/mission-control/commit/554569b>
+<https://github.com/ExpertPartners/mission-control/commit/554569b>
 
 ---
 
@@ -216,7 +216,7 @@ validation.
 top of `indexFile`; on error, log and return without touching the
 filesystem or index. The downstream fs operation uses the resolved
 safe path. Reference patch:
-<https://github.com/ExpertPartnersLLC/mission-control/commit/6a02500>
+<https://github.com/ExpertPartners/mission-control/commit/6a02500>
 
 ---
 
@@ -245,7 +245,7 @@ harden the codebase against future refactors:
    closes the CodeQL `js/incomplete-multi-character-sanitization` alert
    cleanly.
 
-Reference patch: <https://github.com/ExpertPartnersLLC/mission-control/commit/9cd70a3>
+Reference patch: <https://github.com/ExpertPartners/mission-control/commit/9cd70a3>
 
 ---
 

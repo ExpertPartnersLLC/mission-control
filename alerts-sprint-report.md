@@ -10,7 +10,7 @@
 ## Executive summary
 
 Enterprise-grade multi-phase security sprint against
-`ExpertPartnersLLC/mission-control`. All phases executed autonomously
+`ExpertPartners/mission-control`. All phases executed autonomously
 per the sprint launch prompt with one pause at the major-version-bump
 stop condition (documented below as Section 7).
 
